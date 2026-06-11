@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vision App - ChatGPT Style</title>
+    <style>
+        body { font-family: Arial; margin: 0; padding: 20px; background: #f0f0f0; }
+        #chat { height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: white; }
+        .message { margin: 10px 0; padding: 10px; border-radius: 10px; }
+        .user { background: #dcf8c6; margin-left: 20%; }
+        .ai { background: #e5e5ea; }
+        input, button { padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🖼️ Vision App (ChatGPT Style)</h1>
+    <div id="chat"></div>
+    <input type="text" id="msg" placeholder="Ask about image or text...">
+    <input type="file" id="image" accept="image/*">
+    <button onclick="send()">Send</button>
+
+    <script>
+        async function send() {
+            const msg = document.getElementById('msg').value;
+            const file = document.getElementById('image').files[0];
+            let imageBase64 = '';
+            if (file) {
+                imageBase64 = await toBase64(file);
+            }
+            
+            addMessage('user', msg || 'Image uploaded');
+            
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: msg, image: imageBase64})
+            });
+            const data = await res.json();
+            addMessage('ai', data.reply);
+        }
+
+        function toBase64(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function addMessage(sender, text) {
+            const chat = document.getElementById('chat');
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.textContent = text;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+</body>
+</html>
